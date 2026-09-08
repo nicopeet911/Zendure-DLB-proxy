@@ -1,0 +1,644 @@
+[
+  {
+    "id": "dlbstandalone100tab",
+    "type": "tab",
+    "label": "20260701-NL-DLB-Standalone-v1.0-TEST",
+    "disabled": false,
+    "info": "Standalone DLB engine. TEST BUILD: keep the integrated v2.5 flow available for rollback until hardware validation is complete."
+  },
+  {
+    "id": "dlbsa_comment",
+    "type": "comment",
+    "z": "dlbstandalone100tab",
+    "name": "STANDALONE DLB v1.0 TEST \u2014 import adapter-patched Gast777 proxy separately",
+    "info": "",
+    "x": 370,
+    "y": 40,
+    "wires": []
+  },
+  {
+    "id": "dlbsa_inject",
+    "type": "inject",
+    "z": "dlbstandalone100tab",
+    "name": "Initialize standalone DLB on deploy",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": true,
+    "onceDelay": "1",
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 240,
+    "y": 100,
+    "wires": [
+      [
+        "dlbsa_settings"
+      ]
+    ]
+  },
+  {
+    "id": "dlbsa_settings",
+    "type": "function",
+    "z": "dlbstandalone100tab",
+    "name": "Standalone DLB settings",
+    "func": "// ============================================================================\n// Standalone Dynamic Load Balancing settings \u2014 v1.0 TEST\n// ============================================================================\n// This flow uses GLOBAL context deliberately, because the Gast777 adapter and\n// the standalone DLB live on separate Node-RED tabs.\n\nconst cfg = {\n    version: \"20260701-NL-DLB-Standalone-v1.0-TEST\",\n    enabled: 1,\n\n    // Physical phase mapping. Multiple Zendures may share one phase.\n    phases: [\"L1\", \"L2\", \"L3\"],\n\n    // Per-device maximum charging power. Adjust for mixed-power systems.\n    deviceMaxW: [2400, 2400, 2400],\n\n    // Current limits.\n    maxPhaseCurrentA: 25.0,\n    softLimitA: 23.0,\n\n    // P1 and conversion safety.\n    voltageFallbackV: 215,\n    p1MaxAgeSec: 15,\n    failsafeA: 6,\n\n    // Allocation.\n    redistributionEnabled: 1,\n\n    // Recovery ramp-up after DLB protection.\n    rampUpWaitSec: 20,\n    rampUpStepW: 250,\n    rampUpStepIntervalSec: 10,\n\n    // Normal soft-zone ramp-down.\n    softRampDownStepW: 500,\n\n    // Live writes are skipped below this change.\n    liveMinChangeW: 25,\n\n    // Warning repeat limiter.\n    warnCooldownSec: 10\n};\n\nglobal.set('dlb_sa_cfg', cfg);\nglobal.set('dlb_sa_engine_started_ms', Date.now());\nglobal.set('dlb_sa_last_desired_batch', null);\nglobal.set('dlb_sa_last_approved_w', [0, 0, 0]);\nglobal.set('dlb_sa_ramp', [{armed:false,spaceSince:0,lastStep:0},{armed:false,spaceSince:0,lastStep:0},{armed:false,spaceSince:0,lastStep:0}]);\nglobal.set('dlb_sa_status', 'startup_waiting_for_fresh_p1');\nfor (let p=1; p<=3; p++) {\n    global.set('dlb_sa_current_L'+p, null);\n    global.set('dlb_sa_current_ts_L'+p, 0);\n    global.set('dlb_sa_voltage_L'+p, null);\n}\nnode.status({fill:'yellow',shape:'ring',text:'DLB standalone: waiting for fresh P1'});\nreturn null;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 520,
+    "y": 100,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "dlbsa_cur_evt_1",
+    "type": "server-state-changed",
+    "z": "dlbstandalone100tab",
+    "name": "DLB P1 current \u2014 L1",
+    "server": "dlbstandalone100ha",
+    "version": 6,
+    "outputs": 1,
+    "exposeAsEntityConfig": "",
+    "entities": {
+      "entity": [
+        "sensor.p1_meter_current_phase_1"
+      ],
+      "substring": [],
+      "regex": []
+    },
+    "outputInitially": true,
+    "stateType": "str",
+    "ifState": "",
+    "ifStateType": "str",
+    "ifStateOperator": "is",
+    "outputOnlyOnStateChange": false,
+    "for": "0",
+    "forType": "num",
+    "forUnits": "minutes",
+    "ignorePrevStateNull": false,
+    "ignorePrevStateUnknown": false,
+    "ignorePrevStateUnavailable": false,
+    "ignoreCurrentStateUnknown": false,
+    "ignoreCurrentStateUnavailable": false,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      },
+      {
+        "property": "data",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "eventData"
+      },
+      {
+        "property": "phase",
+        "propertyType": "msg",
+        "value": "1",
+        "valueType": "num"
+      }
+    ],
+    "x": 210,
+    "y": 180,
+    "wires": [
+      [
+        "dlbsa_save_current"
+      ]
+    ]
+  },
+  {
+    "id": "dlbsa_cur_evt_2",
+    "type": "server-state-changed",
+    "z": "dlbstandalone100tab",
+    "name": "DLB P1 current \u2014 L2",
+    "server": "dlbstandalone100ha",
+    "version": 6,
+    "outputs": 1,
+    "exposeAsEntityConfig": "",
+    "entities": {
+      "entity": [
+        "sensor.p1_meter_current_phase_2"
+      ],
+      "substring": [],
+      "regex": []
+    },
+    "outputInitially": true,
+    "stateType": "str",
+    "ifState": "",
+    "ifStateType": "str",
+    "ifStateOperator": "is",
+    "outputOnlyOnStateChange": false,
+    "for": "0",
+    "forType": "num",
+    "forUnits": "minutes",
+    "ignorePrevStateNull": false,
+    "ignorePrevStateUnknown": false,
+    "ignorePrevStateUnavailable": false,
+    "ignoreCurrentStateUnknown": false,
+    "ignoreCurrentStateUnavailable": false,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      },
+      {
+        "property": "data",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "eventData"
+      },
+      {
+        "property": "phase",
+        "propertyType": "msg",
+        "value": "2",
+        "valueType": "num"
+      }
+    ],
+    "x": 210,
+    "y": 230,
+    "wires": [
+      [
+        "dlbsa_save_current"
+      ]
+    ]
+  },
+  {
+    "id": "dlbsa_cur_evt_3",
+    "type": "server-state-changed",
+    "z": "dlbstandalone100tab",
+    "name": "DLB P1 current \u2014 L3",
+    "server": "dlbstandalone100ha",
+    "version": 6,
+    "outputs": 1,
+    "exposeAsEntityConfig": "",
+    "entities": {
+      "entity": [
+        "sensor.p1_meter_current_phase_3"
+      ],
+      "substring": [],
+      "regex": []
+    },
+    "outputInitially": true,
+    "stateType": "str",
+    "ifState": "",
+    "ifStateType": "str",
+    "ifStateOperator": "is",
+    "outputOnlyOnStateChange": false,
+    "for": "0",
+    "forType": "num",
+    "forUnits": "minutes",
+    "ignorePrevStateNull": false,
+    "ignorePrevStateUnknown": false,
+    "ignorePrevStateUnavailable": false,
+    "ignoreCurrentStateUnknown": false,
+    "ignoreCurrentStateUnavailable": false,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      },
+      {
+        "property": "data",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "eventData"
+      },
+      {
+        "property": "phase",
+        "propertyType": "msg",
+        "value": "3",
+        "valueType": "num"
+      }
+    ],
+    "x": 210,
+    "y": 280,
+    "wires": [
+      [
+        "dlbsa_save_current"
+      ]
+    ]
+  },
+  {
+    "id": "dlbsa_save_current",
+    "type": "function",
+    "z": "dlbstandalone100tab",
+    "name": "Save P1 current + trigger live DLB",
+    "func": "const p = Number(msg.phase || 0);\nconst value = Number(msg.payload);\nif (!(p >= 1 && p <= 3) || !Number.isFinite(value)) {\n    node.warn('[DLB standalone] Invalid P1 current update.');\n    return null;\n}\nglobal.set('dlb_sa_current_L'+p, value);\nglobal.set('dlb_sa_current_ts_L'+p, Date.now());\nconst c=[1,2,3].map(x=>global.get('dlb_sa_current_L'+x));\nnode.status({fill:'green',shape:'dot',text:new Date().toLocaleTimeString('nl-NL',{hour12:false})+' | '+c.map((v,i)=>'L'+(i+1)+' '+(Number.isFinite(Number(v))?Number(v).toFixed(2):'?')+'A').join(' | ')});\nmsg.dlb_live_trigger = true;\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 540,
+    "y": 230,
+    "wires": [
+      [
+        "dlbsa_engine"
+      ]
+    ]
+  },
+  {
+    "id": "dlbsa_volt_evt_1",
+    "type": "server-state-changed",
+    "z": "dlbstandalone100tab",
+    "name": "DLB P1 voltage \u2014 L1",
+    "server": "dlbstandalone100ha",
+    "version": 6,
+    "outputs": 1,
+    "exposeAsEntityConfig": "",
+    "entities": {
+      "entity": [
+        "sensor.p1_meter_voltage_phase_1"
+      ],
+      "substring": [],
+      "regex": []
+    },
+    "outputInitially": true,
+    "stateType": "str",
+    "ifState": "",
+    "ifStateType": "str",
+    "ifStateOperator": "is",
+    "outputOnlyOnStateChange": false,
+    "for": "0",
+    "forType": "num",
+    "forUnits": "minutes",
+    "ignorePrevStateNull": false,
+    "ignorePrevStateUnknown": false,
+    "ignorePrevStateUnavailable": false,
+    "ignoreCurrentStateUnknown": false,
+    "ignoreCurrentStateUnavailable": false,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      },
+      {
+        "property": "data",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "eventData"
+      },
+      {
+        "property": "phase",
+        "propertyType": "msg",
+        "value": "1",
+        "valueType": "num"
+      }
+    ],
+    "x": 210,
+    "y": 360,
+    "wires": [
+      [
+        "dlbsa_save_voltage"
+      ]
+    ]
+  },
+  {
+    "id": "dlbsa_volt_evt_2",
+    "type": "server-state-changed",
+    "z": "dlbstandalone100tab",
+    "name": "DLB P1 voltage \u2014 L2",
+    "server": "dlbstandalone100ha",
+    "version": 6,
+    "outputs": 1,
+    "exposeAsEntityConfig": "",
+    "entities": {
+      "entity": [
+        "sensor.p1_meter_voltage_phase_2"
+      ],
+      "substring": [],
+      "regex": []
+    },
+    "outputInitially": true,
+    "stateType": "str",
+    "ifState": "",
+    "ifStateType": "str",
+    "ifStateOperator": "is",
+    "outputOnlyOnStateChange": false,
+    "for": "0",
+    "forType": "num",
+    "forUnits": "minutes",
+    "ignorePrevStateNull": false,
+    "ignorePrevStateUnknown": false,
+    "ignorePrevStateUnavailable": false,
+    "ignoreCurrentStateUnknown": false,
+    "ignoreCurrentStateUnavailable": false,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      },
+      {
+        "property": "data",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "eventData"
+      },
+      {
+        "property": "phase",
+        "propertyType": "msg",
+        "value": "2",
+        "valueType": "num"
+      }
+    ],
+    "x": 210,
+    "y": 410,
+    "wires": [
+      [
+        "dlbsa_save_voltage"
+      ]
+    ]
+  },
+  {
+    "id": "dlbsa_volt_evt_3",
+    "type": "server-state-changed",
+    "z": "dlbstandalone100tab",
+    "name": "DLB P1 voltage \u2014 L3",
+    "server": "dlbstandalone100ha",
+    "version": 6,
+    "outputs": 1,
+    "exposeAsEntityConfig": "",
+    "entities": {
+      "entity": [
+        "sensor.p1_meter_voltage_phase_3"
+      ],
+      "substring": [],
+      "regex": []
+    },
+    "outputInitially": true,
+    "stateType": "str",
+    "ifState": "",
+    "ifStateType": "str",
+    "ifStateOperator": "is",
+    "outputOnlyOnStateChange": false,
+    "for": "0",
+    "forType": "num",
+    "forUnits": "minutes",
+    "ignorePrevStateNull": false,
+    "ignorePrevStateUnknown": false,
+    "ignorePrevStateUnavailable": false,
+    "ignoreCurrentStateUnknown": false,
+    "ignoreCurrentStateUnavailable": false,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      },
+      {
+        "property": "data",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "eventData"
+      },
+      {
+        "property": "phase",
+        "propertyType": "msg",
+        "value": "3",
+        "valueType": "num"
+      }
+    ],
+    "x": 210,
+    "y": 460,
+    "wires": [
+      [
+        "dlbsa_save_voltage"
+      ]
+    ]
+  },
+  {
+    "id": "dlbsa_save_voltage",
+    "type": "function",
+    "z": "dlbstandalone100tab",
+    "name": "Save P1 voltage",
+    "func": "const p = Number(msg.phase || 0);\nconst value = Number(msg.payload);\nif (!(p >= 1 && p <= 3) || !Number.isFinite(value) || value < 150 || value > 280) return null;\nglobal.set('dlb_sa_voltage_L'+p, value);\nconst v=[1,2,3].map(x=>global.get('dlb_sa_voltage_L'+x));\nnode.status({fill:'green',shape:'dot',text:new Date().toLocaleTimeString('nl-NL',{hour12:false})+' | '+v.map((n,i)=>'L'+(i+1)+' '+(Number.isFinite(Number(n))?Math.round(Number(n)):'?')+'V').join(' | ')});\nreturn null;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 490,
+    "y": 410,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "dlbstandalone100linkin",
+    "type": "link in",
+    "z": "dlbstandalone100tab",
+    "name": "DLB adapter request IN",
+    "links": [
+      "dlbadapter100linkcall"
+    ],
+    "x": 120,
+    "y": 540,
+    "wires": [
+      [
+        "dlbsa_engine"
+      ]
+    ]
+  },
+  {
+    "id": "dlbsa_engine",
+    "type": "function",
+    "z": "dlbstandalone100tab",
+    "name": "Standalone DLB engine",
+    "func": "// ============================================================================\n// Standalone DLB engine \u2014 adapter request + P1-triggered live recalculation\n// ============================================================================\n\nfunction cloneValue(v){ return JSON.parse(JSON.stringify(v)); }\nfunction cloneMessage(m, keepHttp){\n    const c=Object.assign({},m);\n    c.payload=cloneValue(m.payload);\n    if(m.headers) c.headers=Object.assign({},m.headers);\n    if(!keepHttp){ delete c.req; delete c.res; delete c._res; }\n    return c;\n}\nfunction cloneBatch(batch, keepHttp){ return batch.filter(Boolean).map(m=>cloneMessage(m,keepHttp)); }\nfunction clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }\nfunction phaseIndex(name, fallback){ const m=String(name||'').toUpperCase().match(/^L([123])$/); return m ? Number(m[1])-1 : fallback; }\nfunction warnOnce(key,text,cooldown){\n    const now=Date.now(); const k='dlb_sa_warn_'+key; const last=Number(global.get(k)||0);\n    if(now-last >= cooldown*1000){ node.warn(text); global.set(k,now); }\n}\nfunction phaseGroups(phaseOf,count){\n    return [0,1,2].map(p=>Array.from({length:count},(_,i)=>i).filter(i=>phaseOf[i]===p));\n}\nfunction allocate(wanted, maxW, phaseOf, phaseBudget, redistribute){\n    const count=wanted.length;\n    let target=wanted.map((v,i)=>clamp(Number(v)||0,0,Number(maxW[i])||0));\n    const groups=phaseGroups(phaseOf,count);\n    for(let p=0;p<3;p++){\n        const total=groups[p].reduce((s,i)=>s+target[i],0);\n        if(total>phaseBudget[p]+0.001 && total>0){ const r=phaseBudget[p]/total; groups[p].forEach(i=>target[i]*=r); }\n    }\n    if(redistribute){\n        const requested=wanted.reduce((s,v)=>s+(Number(v)||0),0);\n        let remaining=Math.max(0,requested-target.reduce((s,v)=>s+v,0));\n        for(let guard=0;guard<20 && remaining>0.5;guard++){\n            const used=[0,1,2].map(p=>groups[p].reduce((s,i)=>s+target[i],0));\n            const candidates=Array.from({length:count},(_,i)=>i).filter(i=>maxW[i]-target[i]>0.5 && phaseBudget[phaseOf[i]]-used[phaseOf[i]]>0.5);\n            if(!candidates.length) break;\n            const before=remaining; let added=0;\n            candidates.forEach(i=>{\n                const p=phaseOf[i]; const share=before/candidates.length;\n                const add=Math.min(share,maxW[i]-target[i],phaseBudget[p]-used[p]);\n                if(add>0){target[i]+=add;used[p]+=add;added+=add;}\n            });\n            remaining-=added; if(added<0.1) break;\n        }\n    }\n    target=target.map((v,i)=>Math.floor(clamp(v,0,maxW[i])));\n    for(let p=0;p<3;p++){\n        let excess=groups[p].reduce((s,i)=>s+target[i],0)-Math.floor(phaseBudget[p]);\n        while(excess>0){ const g=groups[p].filter(i=>target[i]>0); if(!g.length) break; g.sort((a,b)=>target[b]-target[a]); const d=Math.min(excess,target[g[0]]); target[g[0]]-=d; excess-=d; }\n    }\n    return target;\n}\n\nconst cfg=global.get('dlb_sa_cfg');\nif(!cfg || !cfg.enabled){\n    if(msg.dlb_batch){ msg.dlb_batch=msg.dlb_batch; return [msg,null]; }\n    return null;\n}\nconst isCall=Array.isArray(msg.dlb_batch);\nconst isLive=Boolean(msg.dlb_live_trigger);\nlet sourceBatch=isCall ? cloneBatch(msg.dlb_batch,true) : cloneBatch(global.get('dlb_sa_last_desired_batch')||[],false);\nif(!Array.isArray(sourceBatch) || !sourceBatch.length) return null;\n\n// Keep only the three device messages and make device order explicit.\nsourceBatch=sourceBatch.filter(Boolean).sort((a,b)=>Number(a.dlb_device_index||0)-Number(b.dlb_device_index||0));\nconst count=Math.min(3,sourceBatch.length);\nsourceBatch=sourceBatch.slice(0,count);\nconst hasChargeCommand=sourceBatch.some(m=>m && m.payload && m.payload.properties && Object.prototype.hasOwnProperty.call(m.payload.properties,'inputLimit'));\nif(!hasChargeCommand){\n    if(isCall){ msg.dlb_batch=sourceBatch; return [msg,null]; }\n    return null;\n}\n\nif(isCall){ global.set('dlb_sa_last_desired_batch', cloneBatch(sourceBatch,false)); }\nconst wanted=sourceBatch.map(m=>Math.max(0,Number(m.payload.properties.inputLimit)||0));\nconst maxW=cfg.deviceMaxW.slice(0,count).map(v=>Math.max(0,Number(v)||2400));\nconst phaseOf=cfg.phases.slice(0,count).map((p,i)=>phaseIndex(p,i));\nconst groups=phaseGroups(phaseOf,count);\nlet previous=(global.get('dlb_sa_last_approved_w')||[0,0,0]).slice(0,count).map(v=>Math.max(0,Number(v)||0));\nwhile(previous.length<count) previous.push(0);\nconst now=Date.now();\nconst started=Number(global.get('dlb_sa_engine_started_ms')||now);\nconst current=[0,1,2].map(p=>Number(global.get('dlb_sa_current_L'+(p+1))));\nconst currentTs=[0,1,2].map(p=>Number(global.get('dlb_sa_current_ts_L'+(p+1))||0));\nconst voltage=[0,1,2].map(p=>{const v=Number(global.get('dlb_sa_voltage_L'+(p+1)));return Number.isFinite(v)&&v>=150&&v<=280?v:Number(cfg.voltageFallbackV||215);});\nconst usedPhases=[0,1,2].filter(p=>groups[p].length && groups[p].some(i=>wanted[i]>0));\nconst fresh=usedPhases.map(p=>Number.isFinite(current[p]) && currentTs[p]>=started && now-currentTs[p]<=Number(cfg.p1MaxAgeSec)*1000);\nconst startupMissing=fresh.some(v=>!v) && usedPhases.some(p=>currentTs[p]<started);\nconst staleMissing=fresh.some(v=>!v) && !startupMissing;\nlet phaseBudget=[Infinity,Infinity,Infinity];\nlet hardTriggered=[]; let softTriggered=[];\n\nfor(let p=0;p<3;p++){\n    const prevGroup=groups[p].reduce((s,i)=>s+previous[i],0);\n    if(!groups[p].length){ phaseBudget[p]=0; continue; }\n    if(!fresh[usedPhases.indexOf(p)] && usedPhases.includes(p)){\n        phaseBudget[p]=startupMissing ? 0 : Number(cfg.failsafeA)*voltage[p];\n        continue;\n    }\n    if(!usedPhases.includes(p)){\n        // No requested charging on this phase; preserve zero target.\n        phaseBudget[p]=0; continue;\n    }\n    const amps=current[p];\n    if(amps>=Number(cfg.maxPhaseCurrentA)){\n        hardTriggered.push(p);\n        phaseBudget[p]=Math.max(0,prevGroup+(Number(cfg.maxPhaseCurrentA)-amps)*voltage[p]);\n    } else if(amps>Number(cfg.softLimitA)){\n        softTriggered.push(p);\n        const exact=Math.max(0,prevGroup+(Number(cfg.softLimitA)-amps)*voltage[p]);\n        phaseBudget[p]=Math.max(exact,Math.max(0,prevGroup-Number(cfg.softRampDownStepW||500)));\n    } else {\n        phaseBudget[p]=Math.max(0,prevGroup+(Number(cfg.softLimitA)-amps)*voltage[p]);\n    }\n}\n\nif(startupMissing){\n    global.set('dlb_sa_status','startup_waiting_for_fresh_p1');\n} else if(staleMissing){\n    global.set('dlb_sa_status','p1_failsafe');\n    warnOnce('p1','[DLB standalone] P1 current data stale/missing; fail-safe charging limit is active.',Number(cfg.warnCooldownSec||10));\n} else if(hardTriggered.length){\n    global.set('dlb_sa_status','hard_throttling');\n    warnOnce('hard','[DLB standalone] Hard phase-current protection active on '+hardTriggered.map(p=>'L'+(p+1)).join(', ')+'.',Number(cfg.warnCooldownSec||10));\n} else if(softTriggered.length){\n    global.set('dlb_sa_status','soft_throttling');\n} else {\n    global.set('dlb_sa_status','normal');\n}\n\nlet target=allocate(wanted,maxW,phaseOf,phaseBudget,Boolean(cfg.redistributionEnabled));\n\n// Controlled ramp-up after any phase protection.\nlet ramps=global.get('dlb_sa_ramp')||[{armed:false,spaceSince:0,lastStep:0},{armed:false,spaceSince:0,lastStep:0},{armed:false,spaceSince:0,lastStep:0}];\nfor(let p=0;p<3;p++){\n    const g=groups[p]; if(!g.length) continue;\n    const prevGroup=g.reduce((s,i)=>s+previous[i],0);\n    const targetGroup=g.reduce((s,i)=>s+target[i],0);\n    const wantedGroup=g.reduce((s,i)=>s+wanted[i],0);\n    if(targetGroup<prevGroup-0.5 || phaseBudget[p]<wantedGroup-0.5){ ramps[p].armed=true; ramps[p].spaceSince=0; }\n    if(ramps[p].armed && targetGroup>prevGroup+0.5){\n        if(!ramps[p].spaceSince) ramps[p].spaceSince=now;\n        const waited=now-ramps[p].spaceSince>=Number(cfg.rampUpWaitSec||0)*1000;\n        let allowed=prevGroup;\n        if(waited){\n            const intervalOk=!ramps[p].lastStep || now-ramps[p].lastStep>=Number(cfg.rampUpStepIntervalSec||0)*1000;\n            if(Number(cfg.rampUpStepW||0)<=0) allowed=targetGroup;\n            else if(intervalOk){ allowed=Math.min(targetGroup,prevGroup+Number(cfg.rampUpStepW)); ramps[p].lastStep=now; }\n        }\n        if(allowed<targetGroup-0.5){\n            const growth=targetGroup-prevGroup;\n            g.forEach(i=>{ const base=previous[i]; const inc=Math.max(0,target[i]-base); target[i]=Math.floor(base+(growth>0?inc*(allowed-prevGroup)/growth:0)); });\n        }\n    } else if(targetGroup<=prevGroup+0.5){ ramps[p].spaceSince=0; }\n    if(targetGroup>=wantedGroup-0.5 && !softTriggered.includes(p) && !hardTriggered.includes(p)){ ramps[p]={armed:false,spaceSince:0,lastStep:0}; }\n}\nglobal.set('dlb_sa_ramp',ramps);\n\nconst approvedBatch=cloneBatch(sourceBatch,isCall);\napprovedBatch.forEach((m,i)=>{\n    if(m && m.payload && m.payload.properties && Object.prototype.hasOwnProperty.call(m.payload.properties,'inputLimit')){\n        m.payload.properties.inputLimit=Math.max(0,Math.floor(target[i]||0));\n    }\n    m.dlb_original_input_limit=wanted[i];\n    m.dlb_approved_input_limit=Math.max(0,Math.floor(target[i]||0));\n    m.dlb_engine_version=cfg.version;\n});\nconst change=target.reduce((mx,v,i)=>Math.max(mx,Math.abs(v-previous[i])),0);\nglobal.set('dlb_sa_last_approved_w',target.concat([0,0,0]).slice(0,3));\nglobal.set('dlb_sa_last_result',{wanted:wanted,approved:target,current:current,voltage:voltage,status:global.get('dlb_sa_status'),timestamp:now});\n\nconst status=global.get('dlb_sa_status');\nif(status==='normal') node.status({fill:'green',shape:'dot',text:'Normal | '+target.join('/')+' W'});\nelse if(status==='soft_throttling') node.status({fill:'yellow',shape:'dot',text:'Soft throttle | '+target.join('/')+' W'});\nelse if(status==='hard_throttling') node.status({fill:'red',shape:'dot',text:'HARD throttle | '+target.join('/')+' W'});\nelse node.status({fill:'yellow',shape:'ring',text:status+' | '+target.join('/')+' W'});\n\nif(isCall){ msg.dlb_batch=approvedBatch; msg.dlb_adapter_result=true; return [msg,null]; }\nif(isLive && change>=Number(cfg.liveMinChangeW||25)){\n    const live={payload:null,dlb_batch:approvedBatch,dlb_live_write:true};\n    // Live writes must not carry the original HTTP request/response objects.\n    live.dlb_batch.forEach(m=>{delete m.req;delete m.res;delete m._res;});\n    return [null,live];\n}\nreturn null;",
+    "outputs": 2,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 520,
+    "y": 540,
+    "wires": [
+      [
+        "dlbstandalone100return"
+      ],
+      [
+        "dlbsa_live_split"
+      ]
+    ]
+  },
+  {
+    "id": "dlbstandalone100return",
+    "type": "link out",
+    "z": "dlbstandalone100tab",
+    "name": "Return approved batch to adapter",
+    "mode": "return",
+    "links": [],
+    "x": 820,
+    "y": 520,
+    "wires": []
+  },
+  {
+    "id": "dlbsa_live_split",
+    "type": "function",
+    "z": "dlbstandalone100tab",
+    "name": "Split P1-triggered live writes",
+    "func": "const batch=Array.isArray(msg.dlb_batch)?msg.dlb_batch:[];\nconst out=[null,null,null];\nbatch.forEach(m=>{\n    const i=Number(m.dlb_device_index||0)-1;\n    if(i>=0 && i<3) out[i]=m;\n});\nreturn out;",
+    "outputs": 3,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 840,
+    "y": 600,
+    "wires": [
+      [
+        "dlbsa_http_1"
+      ],
+      [
+        "dlbsa_http_2"
+      ],
+      [
+        "dlbsa_http_3"
+      ]
+    ]
+  },
+  {
+    "id": "dlbsa_http_1",
+    "type": "http request",
+    "z": "dlbstandalone100tab",
+    "name": "DLB live POST Zendure 1",
+    "method": "use",
+    "ret": "obj",
+    "paytoqs": "ignore",
+    "url": "",
+    "tls": "",
+    "persist": false,
+    "proxy": "",
+    "insecureHTTPParser": false,
+    "authType": "",
+    "senderr": true,
+    "headers": [],
+    "x": 1120,
+    "y": 570,
+    "wires": [
+      [
+        "dlbsa_http_result"
+      ]
+    ]
+  },
+  {
+    "id": "dlbsa_http_2",
+    "type": "http request",
+    "z": "dlbstandalone100tab",
+    "name": "DLB live POST Zendure 2",
+    "method": "use",
+    "ret": "obj",
+    "paytoqs": "ignore",
+    "url": "",
+    "tls": "",
+    "persist": false,
+    "proxy": "",
+    "insecureHTTPParser": false,
+    "authType": "",
+    "senderr": true,
+    "headers": [],
+    "x": 1120,
+    "y": 620,
+    "wires": [
+      [
+        "dlbsa_http_result"
+      ]
+    ]
+  },
+  {
+    "id": "dlbsa_http_3",
+    "type": "http request",
+    "z": "dlbstandalone100tab",
+    "name": "DLB live POST Zendure 3",
+    "method": "use",
+    "ret": "obj",
+    "paytoqs": "ignore",
+    "url": "",
+    "tls": "",
+    "persist": false,
+    "proxy": "",
+    "insecureHTTPParser": false,
+    "authType": "",
+    "senderr": true,
+    "headers": [],
+    "x": 1120,
+    "y": 670,
+    "wires": [
+      [
+        "dlbsa_http_result"
+      ]
+    ]
+  },
+  {
+    "id": "dlbsa_http_result",
+    "type": "function",
+    "z": "dlbstandalone100tab",
+    "name": "DLB live POST result",
+    "func": "const status=Number(msg.statusCode||0);\nif(status>=200 && status<300) return null;\nconst device=Number(msg.dlb_device_index||0);\nconst detail=msg.error?(msg.error.message||String(msg.error)):('HTTP '+(status||'unknown'));\nnode.warn('[DLB standalone live] Zendure '+(device||'?')+' write failed: '+detail+'.');\nreturn null;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1370,
+    "y": 620,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "dlbstandalone100ha",
+    "type": "server",
+    "name": "Home Assistant",
+    "version": 6,
+    "addon": true,
+    "rejectUnauthorizedCerts": true,
+    "ha_boolean": [
+      "y",
+      "yes",
+      "true",
+      "on",
+      "home",
+      "open"
+    ],
+    "connectionDelay": true,
+    "cacheJson": true,
+    "heartbeat": false,
+    "heartbeatInterval": "30",
+    "areaSelector": "friendlyName",
+    "deviceSelector": "friendlyName",
+    "entitySelector": "friendlyName",
+    "statusSeparator": ": ",
+    "statusYear": "hidden",
+    "statusMonth": "short",
+    "statusDay": "numeric",
+    "statusHourCycle": "default",
+    "statusTimeFormat": "h:m",
+    "enableGlobalContextStore": false
+  }
+]
