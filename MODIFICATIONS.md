@@ -20,3 +20,8 @@ Major modifications include:
 12. Experimental standalone DLB/adapter work retained separately and clearly marked TEST.
 
 The original gast777 proxy remains the foundation for the integrated flow. Upstream functionality, API proxy behavior and SoC-aware multi-device distribution were intentionally preserved rather than reimplemented from scratch.
+
+Repository-publication changes:
+
+13. The public current-flow copy replaces the three private local Zendure IP addresses used during development with example `192.168.1.101`–`103` addresses. This does not change DLB logic; users must enter their own Zendure addresses.
+14. Project documentation adds original diagrams and an installation guide adapted from the upstream gast777 setup sequence, with attribution and links back to the authoritative upstream documentation.

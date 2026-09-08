@@ -1,26 +1,88 @@
-# Integrated DLB installation notes
+# Installation — gast777 proxy foundation + DLB extension
 
-These notes cover the integrated DLB flow. Start from the normal gast777/Gielz setup and read the upstream instructions first:
+This guide combines two layers:
 
-https://github.com/gast777/Zendure-zenSDK-proxy
+1. the **base proxy installation** adapted from gast777's upstream documentation; and
+2. the **additional DLB configuration** required by this repository.
 
-## 1. Keep a rollback
+Authoritative upstream documentation:
 
-Export the currently working Node-RED proxy before importing a DLB build.
+https://github.com/gast777/Zendure-zenSDK-proxy#instructions
 
-The last build explicitly confirmed working during development was the v2.5 line. The latest recovered v2.6 build adds the final logging/settings cleanup and should be commissioned while monitoring phase currents.
+## A. Base proxy setup
 
-## 2. Import the flow
+### A1. Requirements
 
-Import the desired JSON from `code/integrated/` into Node-RED.
+- Current Gielz Zendure Home Assistant zenSDK setup installed.
+- Node-RED installed and running.
+- Fixed/stable local addresses for the Zendures and Node-RED server.
+- Reliable network/Wi-Fi connectivity to every Zendure.
+- A backup of the currently working Node-RED flow before changing anything.
 
-## 3. Configure Zendure IP addresses
+### A2. Import the flow into Node-RED
 
-In the main configuration function, set the IP addresses for the active Zendures exactly as required by the upstream gast777 proxy. Leave unused device slots empty.
+Import:
 
-## 4. Configure the real electrical phase mapping
+```text
+code/integrated/current/20260801-NL-DLB-v2.6.json
+```
 
-Set:
+Use the Node-RED menu → **Import**. Install any missing node dependencies Node-RED offers.
+
+### A3. Configure Zendure addresses
+
+Open the main proxy configuration node and enter the local IP addresses for the installed Zendures. Leave unused device entries empty.
+
+### A4. Home Assistant App settings for Node-RED
+
+When Node-RED runs as a Home Assistant App on the same machine, the upstream instructions specify:
+
+- SSL disabled
+- optional/unused configuration options shown
+- `leave_front_door_open` enabled
+- save the App configuration
+- restart Node-RED
+
+### A5. Point Gielz to the proxy
+
+In the Gielz dashboard Settings tab, set **Zendure IP-address** to the Node-RED proxy rather than a physical Zendure.
+
+Same Home Assistant host:
+
+```text
+localhost:1880/endpoint
+```
+
+Separate Node-RED host:
+
+```text
+IP_ADDRESS:1880/endpoint
+```
+
+After this is correct, the normal Gielz sensors should start reading through the proxy.
+
+### A6. Configure combined power limits
+
+Set Gielz **Max Charge Power** and **Max Discharge Power** to the combined capability of the installed system.
+
+Example for identical 2400 W units:
+
+- 2 devices: 4800 W
+- 3 devices: 7200 W
+
+Use your actual device limits.
+
+### A7. Optional upstream monitoring
+
+Gast777 provides extra REST sensor YAML and dashboard snippets to expose individual proxy-device values. Follow the current upstream Monitoring section for those auxiliary files rather than keeping potentially stale duplicates here:
+
+https://github.com/gast777/Zendure-zenSDK-proxy#monitoring
+
+## B. DLB-specific setup
+
+### B1. Configure real electrical phases
+
+Set the real physical phase of every Zendure:
 
 ```text
 zendure_1_phase = "L1" / "L2" / "L3"
@@ -28,15 +90,11 @@ zendure_2_phase = "L1" / "L2" / "L3"
 zendure_3_phase = "L1" / "L2" / "L3"
 ```
 
-Use the actual physical wiring, not merely the device number.
+Duplicate phase assignments are supported by later DLB versions; all devices on one phase share one phase budget.
 
-Duplicate phase assignments are allowed in the later DLB versions; devices on the same phase share one phase budget.
+### B2. Configure P1 current and voltage entities
 
-## 5. Connect the P1 entities
-
-Configure the six Home Assistant `Events: state` nodes for phase current and voltage.
-
-Canonical names used during development:
+Canonical development entities:
 
 ```text
 sensor.p1_meter_current_phase_1
@@ -47,35 +105,38 @@ sensor.p1_meter_voltage_phase_2
 sensor.p1_meter_voltage_phase_3
 ```
 
-If your entities differ, edit those nodes or use `code/adapters/zendure_dlb_p1_adapter.yaml` as a mapping example.
+Edit the six Home Assistant **Events: state** nodes if your entity IDs differ, or use `code/adapters/zendure_dlb_p1_adapter.yaml` as a mapping example.
 
-## 6. Review DLB limits
+### B3. Review limits
 
-Do not copy current limits blindly. Review at minimum:
+Review at minimum:
 
 - hard phase-current limit
 - soft phase-current limit
 - stale-P1 fail-safe current
 - fallback voltage
 - P1 maximum age
-- ramp-down/ramp-up behavior
+- ramp-down/ramp-up settings
 - redistribution setting
+- phase mapping
 
-## 7. Deploy with DLB enabled
+Do not copy electrical current limits without checking the actual installation.
 
-After deploy, confirm that fresh P1 values are visible inside Node-RED. The startup preflight/fail-safe behavior is intentionally conservative until usable current data has arrived.
+### B4. Deploy and verify preflight
 
-## 8. Commissioning tests
+Deploy the flow and confirm fresh P1 values are arriving. The startup preflight is deliberately conservative and prevents unrestricted charging immediately after Node-RED starts/redeploys without fresh phase-current data.
 
-Recommended tests from the development process:
+## C. Commissioning tests
 
-1. Request a normal multi-device charge and confirm the expected SoC-aware split.
-2. Add a significant load to one phase and verify that only the available phase budget is used.
-3. Keep the constrained phase near/above the limit and confirm that DLB throttles it.
-4. Confirm that redistribution uses other phases only when they have spare capacity.
-5. Remove the added load and verify delayed stepped restoration.
-6. Temporarily make one or more P1 inputs stale/unavailable and verify fail-safe limiting.
-7. Reboot/redeploy Node-RED and verify that unrestricted power is not applied before fresh P1 data arrives.
-8. If multiple Zendures share a phase, confirm their combined target remains inside that one phase budget.
+Recommended test sequence:
+
+1. Request a modest multi-device charge and confirm normal SoC-aware distribution.
+2. Add a significant load to one phase and verify that DLB reduces the available charging budget on that phase.
+3. Keep a phase constrained and verify that the hard/soft behavior prevents the requested charging from exceeding the configured phase budget.
+4. Confirm redistribution only uses other phase groups with real spare capacity.
+5. Remove the load and verify delayed stepped restoration.
+6. Make a P1 input stale/unavailable and verify fail-safe limiting.
+7. Reboot/redeploy Node-RED and verify startup preflight again.
+8. If multiple Zendures share one phase, confirm their combined target remains within that one phase budget.
 
 Monitor actual P1 phase currents throughout commissioning.

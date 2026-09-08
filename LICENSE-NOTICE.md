@@ -1,15 +1,11 @@
-# Upstream license notice — action required before public redistribution
+# License notice
 
-The integrated Node-RED flows in this repository are modified versions of:
+This repository contains modified versions of `gast777/Zendure-zenSDK-proxy`.
+
+The complete upstream non-commercial license is included at the repository root as [`LICENSE`](LICENSE). The modification history and the DLB-specific additions are documented in [`MODIFICATIONS.md`](MODIFICATIONS.md).
+
+Upstream source:
 
 https://github.com/gast777/Zendure-zenSDK-proxy
 
-The upstream project is copyright 2026 Casper Rijnders and uses a custom license allowing personal, strictly non-commercial use and modification subject to conditions. Its redistribution requirements state that modified distributions must include the **full upstream license text**, clearly state modifications, and remain non-commercial.
-
-Upstream license page:
-
-https://github.com/gast777/Zendure-zenSDK-proxy/blob/main/LICENSE
-
-Before publishing this repository or distributing the modified full proxy flows, copy the upstream `LICENSE` file into the repository **unchanged** and keep `MODIFICATIONS.md` with it.
-
-This repository-preparation package intentionally does not substitute a rewritten license for the upstream author's exact license text.
+This repository and its derivative proxy flows must remain within the permissions and restrictions of that upstream license.
