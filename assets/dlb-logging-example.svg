@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="650" viewBox="0 0 1200 650">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#10151d"/><stop offset="1" stop-color="#17212e"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-opacity=".28"/></filter>
+  </defs>
+  <rect width="1200" height="650" rx="28" fill="url(#bg)"/>
+  <text x="70" y="78" fill="#f5f7fa" font-family="Arial,Helvetica,sans-serif" font-size="34" font-weight="700">DLB logging — see exactly when and why power changes</text>
+  <text x="70" y="116" fill="#9fb0c5" font-family="Arial,Helvetica,sans-serif" font-size="20">Four channels keep normal control actions separate from safety warnings and deep diagnostics.</text>
+
+  <g font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="18">
+    <rect x="70" y="160" width="1060" height="92" rx="16" fill="#1e2d29" stroke="#48b985" stroke-width="2" filter="url(#shadow)"/>
+    <text x="95" y="196" fill="#77d9aa" font-weight="700">[DLB SOFT]</text>
+    <text x="95" y="226" fill="#dbe6e1">L1 approaches soft limit → charging is reduced smoothly; safe phases stay available.</text>
+
+    <rect x="70" y="274" width="1060" height="92" rx="16" fill="#352d18" stroke="#e1b34b" stroke-width="2" filter="url(#shadow)"/>
+    <text x="95" y="310" fill="#ffd36c" font-weight="700">[DLB STATUS]</text>
+    <text x="95" y="340" fill="#eee8d5">hard_throttling → ramping → ok; useful during setup and commissioning.</text>
+
+    <rect x="70" y="388" width="1060" height="92" rx="16" fill="#3a2024" stroke="#ef6a76" stroke-width="2" filter="url(#shadow)"/>
+    <text x="95" y="424" fill="#ff8791" font-weight="700">[DLB WARNING]</text>
+    <text x="95" y="454" fill="#f4dde0">HARD PROTECTION / P1 FAILSAFE / configuration error — enabled independently.</text>
+
+    <rect x="70" y="502" width="1060" height="92" rx="16" fill="#22263a" stroke="#8696ff" stroke-width="2" filter="url(#shadow)"/>
+    <text x="95" y="538" fill="#a9b4ff" font-weight="700">[DLB DEBUG]</text>
+    <text x="95" y="568" fill="#e0e4ff">wanted / previous / target / phase mode / budgets — deep diagnosis only.</text>
+  </g>
+</svg>

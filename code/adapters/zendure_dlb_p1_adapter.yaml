@@ -1,0 +1,162 @@
+# =============================================================================
+# Zendure DLB - P1 adapter for NON-HOMEWIZARD P1 sources in Home Assistant
+# Adapter revision: v1.1 (source-aware freshness)
+# =============================================================================
+#
+# DO NOT USE THIS FILE for the normal HomeWizard Wi-Fi P1 Meter / P1 Dongle
+# setup when Home Assistant already exposes these entities:
+#
+#   sensor.p1_meter_current_phase_1
+#   sensor.p1_meter_current_phase_2
+#   sensor.p1_meter_current_phase_3
+#   sensor.p1_meter_voltage_phase_1
+#   sensor.p1_meter_voltage_phase_2
+#   sensor.p1_meter_voltage_phase_3
+#
+# Use this file ONLY when another P1/DSMR/energy-meter integration supplies the
+# L1/L2/L3 current and voltage under different Home Assistant entity IDs.
+# Full instructions: docs/OTHER-P1-METERS.md
+#
+# IMPORTANT v1.1 freshness fix
+# ----------------------------
+# The adapter current entities identify their ORIGINAL source entity through
+# attribute `dlb_source_entity_id`. DLB v2.6.1 follows that original source for
+# its 5-second Home Assistant last_reported freshness check. This prevents the
+# template mirror's own timestamp from causing a false P1 stale/fail-safe state.
+#
+# There are exactly SIX source entity IDs to edit below: one trigger per phase
+# current/voltage sensor. The six edit points are clearly marked below.
+#
+# Units/sign requirements
+# -----------------------
+# - Current source: amperes (A), positive must mean more grid import/load.
+# - Voltage source: volts (V).
+# - Verify phase order and sign with a known load before enabling high power.
+# =============================================================================
+
+template:
+  # ---------------------------------------------------------------------------
+  # L1 current
+  # ---------------------------------------------------------------------------
+  - triggers:
+      # <<< CHANGE THIS SOURCE ENTITY ID >>>
+      - trigger: state
+        entity_id: sensor.REPLACE_WITH_YOUR_L1_CURRENT_SENSOR
+    sensor:
+      - name: "P1 Meter Current Phase 1"
+        default_entity_id: sensor.p1_meter_current_phase_1
+        unique_id: zendure_dlb_adapter_p1_meter_current_phase_1
+        unit_of_measurement: "A"
+        device_class: current
+        state_class: measurement
+        availability: >
+          {{ trigger.to_state is not none
+             and trigger.to_state.state not in ['unknown', 'unavailable', '']
+             and is_number(trigger.to_state.state) }}
+        state: "{{ trigger.to_state.state | float(0) }}"
+        attributes:
+          dlb_source_entity_id: "{{ trigger.entity_id }}"
+
+  # ---------------------------------------------------------------------------
+  # L2 current
+  # ---------------------------------------------------------------------------
+  - triggers:
+      # <<< CHANGE THIS SOURCE ENTITY ID >>>
+      - trigger: state
+        entity_id: sensor.REPLACE_WITH_YOUR_L2_CURRENT_SENSOR
+    sensor:
+      - name: "P1 Meter Current Phase 2"
+        default_entity_id: sensor.p1_meter_current_phase_2
+        unique_id: zendure_dlb_adapter_p1_meter_current_phase_2
+        unit_of_measurement: "A"
+        device_class: current
+        state_class: measurement
+        availability: >
+          {{ trigger.to_state is not none
+             and trigger.to_state.state not in ['unknown', 'unavailable', '']
+             and is_number(trigger.to_state.state) }}
+        state: "{{ trigger.to_state.state | float(0) }}"
+        attributes:
+          dlb_source_entity_id: "{{ trigger.entity_id }}"
+
+  # ---------------------------------------------------------------------------
+  # L3 current
+  # ---------------------------------------------------------------------------
+  - triggers:
+      # <<< CHANGE THIS SOURCE ENTITY ID >>>
+      - trigger: state
+        entity_id: sensor.REPLACE_WITH_YOUR_L3_CURRENT_SENSOR
+    sensor:
+      - name: "P1 Meter Current Phase 3"
+        default_entity_id: sensor.p1_meter_current_phase_3
+        unique_id: zendure_dlb_adapter_p1_meter_current_phase_3
+        unit_of_measurement: "A"
+        device_class: current
+        state_class: measurement
+        availability: >
+          {{ trigger.to_state is not none
+             and trigger.to_state.state not in ['unknown', 'unavailable', '']
+             and is_number(trigger.to_state.state) }}
+        state: "{{ trigger.to_state.state | float(0) }}"
+        attributes:
+          dlb_source_entity_id: "{{ trigger.entity_id }}"
+
+  # ---------------------------------------------------------------------------
+  # L1 voltage
+  # ---------------------------------------------------------------------------
+  - triggers:
+      # <<< CHANGE THIS SOURCE ENTITY ID >>>
+      - trigger: state
+        entity_id: sensor.REPLACE_WITH_YOUR_L1_VOLTAGE_SENSOR
+    sensor:
+      - name: "P1 Meter Voltage Phase 1"
+        default_entity_id: sensor.p1_meter_voltage_phase_1
+        unique_id: zendure_dlb_adapter_p1_meter_voltage_phase_1
+        unit_of_measurement: "V"
+        device_class: voltage
+        state_class: measurement
+        availability: >
+          {{ trigger.to_state is not none
+             and trigger.to_state.state not in ['unknown', 'unavailable', '']
+             and is_number(trigger.to_state.state) }}
+        state: "{{ trigger.to_state.state | float(0) }}"
+
+  # ---------------------------------------------------------------------------
+  # L2 voltage
+  # ---------------------------------------------------------------------------
+  - triggers:
+      # <<< CHANGE THIS SOURCE ENTITY ID >>>
+      - trigger: state
+        entity_id: sensor.REPLACE_WITH_YOUR_L2_VOLTAGE_SENSOR
+    sensor:
+      - name: "P1 Meter Voltage Phase 2"
+        default_entity_id: sensor.p1_meter_voltage_phase_2
+        unique_id: zendure_dlb_adapter_p1_meter_voltage_phase_2
+        unit_of_measurement: "V"
+        device_class: voltage
+        state_class: measurement
+        availability: >
+          {{ trigger.to_state is not none
+             and trigger.to_state.state not in ['unknown', 'unavailable', '']
+             and is_number(trigger.to_state.state) }}
+        state: "{{ trigger.to_state.state | float(0) }}"
+
+  # ---------------------------------------------------------------------------
+  # L3 voltage
+  # ---------------------------------------------------------------------------
+  - triggers:
+      # <<< CHANGE THIS SOURCE ENTITY ID >>>
+      - trigger: state
+        entity_id: sensor.REPLACE_WITH_YOUR_L3_VOLTAGE_SENSOR
+    sensor:
+      - name: "P1 Meter Voltage Phase 3"
+        default_entity_id: sensor.p1_meter_voltage_phase_3
+        unique_id: zendure_dlb_adapter_p1_meter_voltage_phase_3
+        unit_of_measurement: "V"
+        device_class: voltage
+        state_class: measurement
+        availability: >
+          {{ trigger.to_state is not none
+             and trigger.to_state.state not in ['unknown', 'unavailable', '']
+             and is_number(trigger.to_state.state) }}
+        state: "{{ trigger.to_state.state | float(0) }}"
