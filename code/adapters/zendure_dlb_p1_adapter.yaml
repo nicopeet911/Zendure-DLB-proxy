@@ -1,0 +1,132 @@
+# =============================================================================
+# Zendure DLB – P1 sensor adapter for Home Assistant
+# =============================================================================
+# Purpose
+# -------
+# This optional file adapts any compatible three-phase meter integration to the
+# six entity IDs expected by the current Node-RED DLB proxy flow:
+#
+#   sensor.p1_meter_current_phase_1
+#   sensor.p1_meter_current_phase_2
+#   sensor.p1_meter_current_phase_3
+#   sensor.p1_meter_voltage_phase_1
+#   sensor.p1_meter_voltage_phase_2
+#   sensor.p1_meter_voltage_phase_3
+#
+# It does NOT change your original meter entities and it does NOT require a
+# Node-RED flow change.
+#
+# IMPORTANT
+# ---------
+# 1. Use this only when your Home Assistant does NOT already provide the six
+#    exact entity IDs above. If it already does, this adapter is unnecessary.
+# 2. For each sensor below, replace ONLY the entity ID marked:
+#       <<< CHANGE THIS SOURCE ENTITY ID >>>
+# 3. Current sensors must report net phase current in amperes (A).
+#    DLB expects a higher positive current to mean more grid import/load on
+#    that phase. Verify the sign with a small known load before relying on DLB.
+# 4. Voltage sensors must report volts (V).
+#
+# Recommended installation (Home Assistant package)
+# -------------------------------------------------
+# 1. Copy this complete file to:
+#      /config/packages/zendure_dlb_p1_adapter.yaml
+# 2. Ensure configuration.yaml contains (under the existing homeassistant block):
+#      homeassistant:
+#        packages: !include_dir_named packages
+#    Do not create a second `homeassistant:` block if one already exists.
+# 3. Replace only the six source entity IDs marked below.
+# 4. Check configuration, restart Home Assistant, and verify the six canonical
+#    sensor.p1_meter_* entities exist.
+# 5. Leave the DLB P1 Events: state nodes in Node-RED unchanged.
+#
+# Advanced users can merge these template sensors into another template/package
+# layout, but note that this complete file already contains its top-level
+# `template:` key.
+# =============================================================================
+
+template:
+  - sensor:
+      # -----------------------------------------------------------------------
+      # L1 current
+      # -----------------------------------------------------------------------
+      - name: "P1 Meter Current Phase 1"
+        unique_id: zendure_dlb_adapter_p1_meter_current_phase_1
+        unit_of_measurement: "A"
+        device_class: current
+        state_class: measurement
+        # <<< CHANGE THIS SOURCE ENTITY ID >>>
+        availability: >
+          {{ has_value('sensor.REPLACE_WITH_YOUR_L1_CURRENT_SENSOR') }}
+        state: >
+          {{ states('sensor.REPLACE_WITH_YOUR_L1_CURRENT_SENSOR') | float }}
+
+      # -----------------------------------------------------------------------
+      # L2 current
+      # -----------------------------------------------------------------------
+      - name: "P1 Meter Current Phase 2"
+        unique_id: zendure_dlb_adapter_p1_meter_current_phase_2
+        unit_of_measurement: "A"
+        device_class: current
+        state_class: measurement
+        # <<< CHANGE THIS SOURCE ENTITY ID >>>
+        availability: >
+          {{ has_value('sensor.REPLACE_WITH_YOUR_L2_CURRENT_SENSOR') }}
+        state: >
+          {{ states('sensor.REPLACE_WITH_YOUR_L2_CURRENT_SENSOR') | float }}
+
+      # -----------------------------------------------------------------------
+      # L3 current
+      # -----------------------------------------------------------------------
+      - name: "P1 Meter Current Phase 3"
+        unique_id: zendure_dlb_adapter_p1_meter_current_phase_3
+        unit_of_measurement: "A"
+        device_class: current
+        state_class: measurement
+        # <<< CHANGE THIS SOURCE ENTITY ID >>>
+        availability: >
+          {{ has_value('sensor.REPLACE_WITH_YOUR_L3_CURRENT_SENSOR') }}
+        state: >
+          {{ states('sensor.REPLACE_WITH_YOUR_L3_CURRENT_SENSOR') | float }}
+
+      # -----------------------------------------------------------------------
+      # L1 voltage
+      # -----------------------------------------------------------------------
+      - name: "P1 Meter Voltage Phase 1"
+        unique_id: zendure_dlb_adapter_p1_meter_voltage_phase_1
+        unit_of_measurement: "V"
+        device_class: voltage
+        state_class: measurement
+        # <<< CHANGE THIS SOURCE ENTITY ID >>>
+        availability: >
+          {{ has_value('sensor.REPLACE_WITH_YOUR_L1_VOLTAGE_SENSOR') }}
+        state: >
+          {{ states('sensor.REPLACE_WITH_YOUR_L1_VOLTAGE_SENSOR') | float }}
+
+      # -----------------------------------------------------------------------
+      # L2 voltage
+      # -----------------------------------------------------------------------
+      - name: "P1 Meter Voltage Phase 2"
+        unique_id: zendure_dlb_adapter_p1_meter_voltage_phase_2
+        unit_of_measurement: "V"
+        device_class: voltage
+        state_class: measurement
+        # <<< CHANGE THIS SOURCE ENTITY ID >>>
+        availability: >
+          {{ has_value('sensor.REPLACE_WITH_YOUR_L2_VOLTAGE_SENSOR') }}
+        state: >
+          {{ states('sensor.REPLACE_WITH_YOUR_L2_VOLTAGE_SENSOR') | float }}
+
+      # -----------------------------------------------------------------------
+      # L3 voltage
+      # -----------------------------------------------------------------------
+      - name: "P1 Meter Voltage Phase 3"
+        unique_id: zendure_dlb_adapter_p1_meter_voltage_phase_3
+        unit_of_measurement: "V"
+        device_class: voltage
+        state_class: measurement
+        # <<< CHANGE THIS SOURCE ENTITY ID >>>
+        availability: >
+          {{ has_value('sensor.REPLACE_WITH_YOUR_L3_VOLTAGE_SENSOR') }}
+        state: >
+          {{ states('sensor.REPLACE_WITH_YOUR_L3_VOLTAGE_SENSOR') | float }}

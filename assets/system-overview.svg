@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600" role="img" aria-labelledby="title desc">
+  <title id="title">Zendure DLB system overview</title>
+  <desc id="desc">Home Assistant and Gielz communicate with the gast777 Node-RED proxy. Dynamic load balancing reads HomeWizard P1 phase current and voltage by default, or equivalent Home Assistant adapter sensors and limits charging commands before they reach up to three Zendure devices.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#4c7180"/></marker>
+  </defs>
+  <rect width="1200" height="600" rx="24" fill="#f7fbfc"/>
+  <g font-family="Arial, Helvetica, sans-serif">
+    <rect x="55" y="165" width="235" height="150" rx="22" fill="#fff" stroke="#6b9cab" stroke-width="2"/>
+    <text x="172" y="214" text-anchor="middle" font-size="23" font-weight="700" fill="#18343b">Home Assistant</text>
+    <text x="172" y="248" text-anchor="middle" font-size="19" fill="#315d68">Gielz zenSDK</text>
+    <text x="172" y="279" text-anchor="middle" font-size="16" fill="#55747c">power request + sensors</text>
+
+    <rect x="395" y="118" width="365" height="245" rx="24" fill="#122c33" stroke="#3cc3b2" stroke-width="3"/>
+    <text x="578" y="170" text-anchor="middle" font-size="27" font-weight="700" fill="#fff">Node-RED Proxy</text>
+    <text x="578" y="205" text-anchor="middle" font-size="18" fill="#9de9df">gast777 foundation</text>
+    <rect x="444" y="235" width="268" height="88" rx="18" fill="#17474d" stroke="#74e0d2"/>
+    <text x="578" y="270" text-anchor="middle" font-size="22" font-weight="700" fill="#d8fffb">DLB v2.6</text>
+    <text x="578" y="299" text-anchor="middle" font-size="16" fill="#b8e7e2">phase budgets + fail-safe + ramping</text>
+
+    <rect x="395" y="430" width="365" height="108" rx="22" fill="#fff" stroke="#d6a94f" stroke-width="2"/>
+    <text x="578" y="470" text-anchor="middle" font-size="22" font-weight="700" fill="#554317">HomeWizard P1 / HA adapter</text>
+    <text x="578" y="503" text-anchor="middle" font-size="17" fill="#806928">L1/L2/L3 current + voltage</text>
+
+    <g>
+      <rect x="875" y="70" width="250" height="118" rx="20" fill="#fff" stroke="#6b9cab" stroke-width="2"/>
+      <text x="1000" y="113" text-anchor="middle" font-size="22" font-weight="700" fill="#18343b">Zendure 1</text>
+      <text x="1000" y="147" text-anchor="middle" font-size="18" fill="#277267">physical phase L1/L2/L3</text>
+    </g>
+    <g>
+      <rect x="875" y="239" width="250" height="118" rx="20" fill="#fff" stroke="#6b9cab" stroke-width="2"/>
+      <text x="1000" y="282" text-anchor="middle" font-size="22" font-weight="700" fill="#18343b">Zendure 2</text>
+      <text x="1000" y="316" text-anchor="middle" font-size="18" fill="#277267">physical phase L1/L2/L3</text>
+    </g>
+    <g>
+      <rect x="875" y="408" width="250" height="118" rx="20" fill="#fff" stroke="#6b9cab" stroke-width="2"/>
+      <text x="1000" y="451" text-anchor="middle" font-size="22" font-weight="700" fill="#18343b">Zendure 3</text>
+      <text x="1000" y="485" text-anchor="middle" font-size="18" fill="#277267">physical phase L1/L2/L3</text>
+    </g>
+  </g>
+  <g fill="none" stroke="#4c7180" stroke-width="4" marker-end="url(#arrow)">
+    <path d="M290 240 H385"/>
+    <path d="M760 180 C820 180 820 128 865 128"/>
+    <path d="M760 240 H865"/>
+    <path d="M760 300 C820 300 820 466 865 466"/>
+    <path d="M578 430 V375"/>
+  </g>
+  <g font-family="Arial, Helvetica, sans-serif" font-size="15" fill="#55747c">
+    <text x="321" y="226">REST</text>
+    <text x="774" y="164">controlled inputLimit</text>
+    <text x="600" y="401">live feedback</text>
+  </g>
+</svg>
