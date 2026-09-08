@@ -1,36 +1,30 @@
 # Installation and commissioning
 
-This guide describes the **normal HomeWizard P1 Dongle path**. It follows the current gast777 proxy setup sequence and then adds the DLB-specific steps.
+This page gives the more detailed installation steps for the integrated DLB proxy.
 
 > [!IMPORTANT]
-> If your phase current/voltage comes from anything other than the normal HomeWizard P1 Dongle entity set, first use [OTHER-P1-METERS.md](OTHER-P1-METERS.md). Do not mix the adapter procedure into the standard installation.
+> The normal path is for **HomeWizard P1 Dongle** users with the standard `sensor.p1_meter_*` phase current/voltage entities.
+>
+> If you use another P1 / DSMR / three-phase meter, go to [OTHER-P1-METERS.md](OTHER-P1-METERS.md).
 
-## A. Upstream proxy prerequisites
+## 1. Import the correct flow
 
-- Working Home Assistant + Gielz ZenSDK setup.
-- Node-RED installed and running.
-- Fixed/stable IP addresses for Node-RED and each Zendure.
-- Strong/reliable network connectivity to the Zendures.
-- HomeWizard P1 Dongle integrated in Home Assistant.
-- Export/backup of your existing Node-RED flows.
+- **HomeWizard P1 Dongle:** `code/integrated/current/20260801-NL-DLB-v2.6.json`
+- **Other P1 meters:** `code/integrated/current/20260801-NL-DLB-v2.6.1.json` together with the adapter guide
 
-The proxy foundations and installation model originate from [gast777/Zendure-zenSDK-proxy](https://github.com/gast777/Zendure-zenSDK-proxy). Check upstream for the latest generic proxy instructions.
+## 2. Configure Zendure IP addresses
 
-## B. Import the DLB proxy
-
-Import:
+Open the node:
 
 ```text
-code/integrated/current/20260801-NL-DLB-v2.6.json
+===> Vul hier de Zendure IP adressen in <===
 ```
 
-Use Node-RED **Menu → Import**. Review settings before deploying.
+Fill in the fixed IP addresses of your Zendure devices and leave unused slots empty.
 
-## C. Configure the Zendures
+## 3. Configure the real electrical phases
 
-In `===> Vul hier de Zendure IP adressen in <===`, enter each installed Zendure's fixed local IP address. Leave unused slots empty.
-
-Configure the actual electrical phase of each active device:
+Set the actual phase of each active Zendure:
 
 ```javascript
 let zendure_1_phase = "L1"
@@ -38,98 +32,60 @@ let zendure_2_phase = "L2"
 let zendure_3_phase = "L3"
 ```
 
-Duplicate phase assignments are supported; all devices on one physical phase share one phase budget.
+These must match the real wiring. Multiple Zendures may share one phase.
 
-## D. Verify HomeWizard P1 entities
+## 4. Review the key DLB settings
 
-The standard flow expects:
-
-```text
-sensor.p1_meter_current_phase_1
-sensor.p1_meter_current_phase_2
-sensor.p1_meter_current_phase_3
-sensor.p1_meter_voltage_phase_1
-sensor.p1_meter_voltage_phase_2
-sensor.p1_meter_voltage_phase_3
-```
-
-If they exist, leave all six DLB P1 Node-RED nodes unchanged.
-
-If they do not exist because you use a different meter/integration, stop this guide and use [OTHER-P1-METERS.md](OTHER-P1-METERS.md).
-
-## E. Review DLB limits and behavior
-
-At minimum review:
-
-- `dynamic_load_balancing_max_phase_current_amp`
-- `dynamic_load_balancing_soft_limit_amp`
-- `dynamic_load_balancing_failsafe_amp`
-- `dynamic_load_balancing_voltage_fallback`
-- `dynamic_load_balancing_p1_max_age_sec`
-- redistribution enable
-- soft ramp-down step
-- ramp-up wait, step and interval
-- physical Zendure phase mapping
-
-Do not copy electrical limits without checking your own installation.
-
-## F. Choose logging
-
-Recommended daily settings:
+Important defaults:
 
 ```javascript
-let dynamic_load_balancing_log_soft_info = 1
-let dynamic_load_balancing_log_status_info = 0
-let dynamic_load_balancing_log_warnings = 1
-let dynamic_load_balancing_log_debug = 0
+let dynamic_load_balancing_max_phase_current_amp = 25
+let dynamic_load_balancing_soft_limit_amp = 23.0
+let dynamic_load_balancing_failsafe_amp = 6
+let dynamic_load_balancing_p1_max_age_sec = 15
+let dynamic_load_balancing_ramp_up_wait_sec = 20
 ```
 
-See [DLB-logging.md](DLB-logging.md) for descriptions and example output.
+## 5. Recommended EV-priority setup for a Dutch 3×25A home
 
-## G. Deploy and verify preflight
+If your EV charger has its own load balancing, a simple safe setup is:
 
-Deploy the flow. Fresh P1 current must arrive after start/deploy before unrestricted charging is allowed. This prevents old flow-context data from immediately releasing a large charging command.
+- set the **battery DLB hard limit** to **25A**;
+- set the **battery DLB soft limit** to **23A**;
+- set the **EV charger’s own load-balancing limit** to **24–25A**.
 
-## H. Configure Gielz to use the proxy
+This lets the EV charger keep priority while the Zendures back off first.
 
-Following gast777's upstream instructions, set the Zendure address in the Gielz dashboard to the Node-RED proxy, for example:
+## 6. Point Gielz to the proxy
+
+In Home Assistant / Gielz, set the Zendure IP address field to your Node-RED proxy, for example:
 
 ```text
 192.168.x.x:1880/endpoint
 ```
 
-Then configure Gielz's maximum charge/discharge power for the desired combined installed capacity.
+Set the maximum charge/discharge power to the combined capability of your installed Zendures.
 
-### Node-RED as Home Assistant App
+## 7. Commission carefully
 
-Gast777's current upstream instructions specify:
+Start modestly and verify:
 
-1. Node-RED App: disable `ssl`.
-2. Enable **Show unused optional configuration options**.
-3. Enable `leave_front_door_open`.
-4. Save and restart Node-RED.
-5. Configure Gielz's Zendure IP/address as:
+1. P1 current and voltage values are updating correctly.
+2. Adding load to a phase reduces Zendure charging on that phase.
+3. Other phases only take over when there is real spare capacity.
+4. Removing the load causes controlled ramp-up.
+5. Missing/stale P1 data activates the configured fail-safe.
+6. After a Node-RED restart, startup preflight holds charging until fresh P1 data arrives.
 
-```text
-localhost:1880/endpoint
+## 8. Watch Node-RED logs during testing
+
+Recommended commissioning profile:
+
+```javascript
+let dynamic_load_balancing_log_soft_info = 1
+let dynamic_load_balancing_log_status_info = 1
+let dynamic_load_balancing_log_warnings = 1
+let dynamic_load_balancing_log_debug = 0
 ```
 
-## I. Commissioning tests
-
-1. Start with a modest charge request.
-2. Confirm normal gast777 SoC distribution is still present.
-3. Add a known load to L1 and confirm L1 charging is constrained.
-4. Verify redistribution only uses phases with real headroom.
-5. Remove the load and observe delayed/stepped ramp-up.
-6. Test the hard limit carefully with monitored current; hard protection should reduce immediately.
-7. Make P1 current unavailable/stale and verify the fail-safe budget activates.
-8. Redeploy while a charge request exists; preflight should hold charging until fresh P1 is received.
-9. If multiple Zendures share a phase, verify their **combined** charging remains inside the one phase budget.
-
-Monitor the real P1 phase currents throughout testing.
-
-## J. Optional upstream monitoring
-
-Gast777 provides extra REST sensors/dashboard snippets for monitoring individual devices behind the proxy. Use the current upstream **Monitoring** section rather than duplicating those files here:
-
-https://github.com/gast777/Zendure-zenSDK-proxy#monitoring
+After successful testing, many users prefer to turn `status_info` back off.
