@@ -40,3 +40,32 @@ This changelog summarizes the main recovered milestones of the integrated DLB pr
 - Non-HomeWizard compatibility improvement.
 - Adapter path now supports source-aware freshness checking for the `last_reported` issue.
 - Intended only for users following the separate other-P1 compatibility path.
+
+## v2.7
+
+- DLB recovery logic improved.
+
+- Ramp-up protection now activates only after genuine DLB limiting or fail-safe events.
+
+- Normal Gielz/NOM power reductions no longer trigger false recovery states.
+
+- False soft/throttling states caused by redistribution, rounding or normal recovery were removed.
+
+- Compact DLB logging, status transitions, shared heartbeat and Node-RED status colours improved.
+
+## v2.8
+
+- Minimum useful charging power per Zendure added.
+
+- Small allocations below the configured threshold are removed and redistributed to other eligible Zendures where safely possible.
+
+- 1 W rounding leftovers and false redistribution/throttling messages fixed.
+
+- Redistribution of 50 W or less is no longer shown in normal operational logs.
+
+- New setting:
+
+    dynamic_load_balancing_min_device_charge_w = 100
+    100 = every charging Zendure receives either 0 W or at least 100 W.
+    Change the value to select another minimum charging threshold.
+    0 = disable the feature and retain the previous allocation behaviour.
